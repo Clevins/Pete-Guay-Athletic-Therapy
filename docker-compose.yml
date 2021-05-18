@@ -1,0 +1,62 @@
+version: "3"
+
+services:
+  pg-at-strapi-app:
+    image: strapi/strapi
+    container_name: pg-at-strapi-app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_CLIENT: ${DATABASE_CLIENT}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_URI: ${DATABASE_URI}
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_SRV: ${DATABASE_SRV}
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      CLOUDINARY_NAME: ${CLOUDINARY_NAME}
+      CLOUDINARY_KEY: ${CLOUDINARY_KEY}
+      CLOUDINARY_SECRET: ${CLOUDINARY_SECRET}
+    networks:
+      - strapi-app-network
+    volumes:
+      - ./strapi-app:/srv/app
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "1337:1337"
+
+  pg-at-mongodb:
+    image: mongo
+    container_name: pg-at-mongodb
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    networks:
+      - strapi-app-network
+    volumes:
+      - strapidata:/data/db
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "27017:27017"
+
+  pg-at-nextjs-app:
+    container_name: pg-at-nextjs-app
+    build:
+      context: ./web
+    environment:
+      API_BASEURL: ${API_BASEURL}
+    volumes:
+      - ./web:/usr/src/app
+      - /etc/localtime:/etc/localtime:ro
+    command: npm run dev
+    ports:
+      - 3000:3000
+
+networks:
+  strapi-app-network:
+    driver: bridge
+
+volumes:
+  strapidata:
